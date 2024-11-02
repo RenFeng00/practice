@@ -1,0 +1,141 @@
+题目：找出两个列表的公共元素，并按频率降序排列
+描述
+给定两个列表list1和list2，请找出它们的公共元素，并按照元素在list1中出现的频率降序排序。如果有多个元素出现频率相同，则按元素在list1中的原始顺序排列。
+
+示例
+plaintext
+复制代码
+输入:
+list1 = ["apple", "banana", "apple", "orange", "banana", "apple"]
+list2 = ["banana", "orange", "grape"]
+
+输出:
+["apple", "banana", "orange"]
+解释
+两个列表的公共元素是 "banana" 和 "orange".
+"apple" 虽然不在 list2 中，但它是list1中最频繁的元素，因此在输出中保留顺序。
+输出按频率降序排序，所以 "apple" 排在 "banana" 前。
+解题思路
+首先遍历list1，统计每个元素的出现次数。
+从list2中筛选出在list1中出现的元素，保留公共元素。
+按照频率降序排序，使用哈希表（字典）存储元素和它们的频率。
+输出排序后的元素列表。
+Python解答
+我们将使用collections.Counter来统计频率，并利用排序实现降序排列。
+
+python
+复制代码
+from collections import Counter
+
+def find_common_elements(list1, list2):
+    # Step 1: Count frequency of each element in list1
+    frequency = Counter(list1)
+    
+    # Step 2: Filter elements that are common in list2
+    common_elements = [elem for elem in list1 if elem in list2]
+    
+    # Step 3: Sort by frequency in descending order, and by original order if frequency is the same
+    common_elements = sorted(set(common_elements), key=lambda x: (-frequency[x], list1.index(x)))
+    
+    return common_elements
+
+# 测试示例
+list1 = ["apple", "banana", "apple", "orange", "banana", "apple"]
+list2 = ["banana", "orange", "grape"]
+output = find_common_elements(list1, list2)
+print(output)
+Python代码详解
+Counter(list1)会创建一个哈希表，其中元素为键，频率为值。
+[elem for elem in list1 if elem in list2]用于筛选list1中存在于list2中的元素，保持顺序。
+sorted()通过-frequency[x]来确保频率降序，同时list1.index(x)确保在频率相同时按原始顺序排列。
+C语言解答
+在C中，由于缺少直接的哈希表工具，我们可以通过自定义结构体数组来存储元素及其频率。以下是解答的实现：
+
+c
+复制代码
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_ELEMENTS 100
+
+typedef struct {
+    char element[20];
+    int frequency;
+    int first_index;
+} ElementInfo;
+
+int find_index(ElementInfo elements[], int size, char *element) {
+    for (int i = 0; i < size; i++) {
+        if (strcmp(elements[i].element, element) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int compare(const void *a, const void *b) {
+    ElementInfo *elem1 = (ElementInfo *)a;
+    ElementInfo *elem2 = (ElementInfo *)b;
+    
+    if (elem1->frequency != elem2->frequency)
+        return elem2->frequency - elem1->frequency;
+    return elem1->first_index - elem2->first_index;
+}
+
+void find_common_elements(char list1[][20], int len1, char list2[][20], int len2) {
+    ElementInfo elements[MAX_ELEMENTS];
+    int elem_count = 0;
+
+    // Step 1: Count frequencies in list1
+    for (int i = 0; i < len1; i++) {
+        int idx = find_index(elements, elem_count, list1[i]);
+        if (idx == -1) {
+            strcpy(elements[elem_count].element, list1[i]);
+            elements[elem_count].frequency = 1;
+            elements[elem_count].first_index = i;
+            elem_count++;
+        } else {
+            elements[idx].frequency++;
+        }
+    }
+
+    // Step 2: Filter common elements with list2
+    ElementInfo common_elements[MAX_ELEMENTS];
+    int common_count = 0;
+    for (int i = 0; i < elem_count; i++) {
+        for (int j = 0; j < len2; j++) {
+            if (strcmp(elements[i].element, list2[j]) == 0) {
+                common_elements[common_count++] = elements[i];
+                break;
+            }
+        }
+    }
+
+    // Step 3: Sort by frequency descending, then by first occurrence
+    qsort(common_elements, common_count, sizeof(ElementInfo), compare);
+
+    // Print result
+    printf("[");
+    for (int i = 0; i < common_count; i++) {
+        printf("\"%s\"", common_elements[i].element);
+        if (i < common_count - 1) printf(", ");
+    }
+    printf("]\n");
+}
+
+int main() {
+    char list1[][20] = {"apple", "banana", "apple", "orange", "banana", "apple"};
+    char list2[][20] = {"banana", "orange", "grape"};
+    int len1 = sizeof(list1) / sizeof(list1[0]);
+    int len2 = sizeof(list2) / sizeof(list2[0]);
+    
+    find_common_elements(list1, len1, list2, len2);
+    
+    return 0;
+}
+C代码详解
+结构体ElementInfo：用于存储元素、频率和首次出现的索引。
+查找函数find_index：遍历结构体数组，找到匹配元素的索引。
+排序函数compare：使用qsort实现频率降序和首次出现位置的排序。
+核心函数find_common_elements：统计list1中每个元素的频率，将list2中存在的公共元素加入common_elements数组，并按要求排序。
+这种题目练习了列表操作、排序和字符串比较等基本技巧，非常适合提升代码综合能力。
