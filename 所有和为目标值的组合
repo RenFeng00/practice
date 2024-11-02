@@ -1,0 +1,147 @@
+题目：所有和为目标值的组合
+描述
+给定一个包含不同整数的数组candidates和一个目标值target，找出所有和为target的组合。数组中的数字可以无限次重复使用，但每种组合内的数字顺序不重要。
+
+示例
+plaintext
+复制代码
+输入:
+candidates = [2, 3, 6, 7]
+target = 7
+
+输出:
+[
+  [7],
+  [2, 2, 3]
+]
+解释
+可以用7或[2, 2, 3]的组合来达到目标值7。
+组合中的元素顺序不重要。
+解题思路
+这是一个典型的回溯算法问题，我们需要构建所有可能的组合。
+使用回溯法：尝试从数组的每个元素开始，递归地累加元素直到和达到或超过target。
+如果和超过target，则回溯；如果达到target，则将当前组合加入结果。
+Python解答
+python
+复制代码
+def combination_sum(candidates, target):
+    result = []
+
+    # Helper function for backtracking
+    def backtrack(remain, comb, start):
+        if remain == 0:
+            # If we hit the target, add the combination to the result
+            result.append(list(comb))
+            return
+        elif remain < 0:
+            # If we exceed the target, backtrack
+            return
+
+        # Iterate over the candidates starting from the current position
+        for i in range(start, len(candidates)):
+            # Append the candidate to the combination
+            comb.append(candidates[i])
+            # Recursively call with updated remaining target
+            backtrack(remain - candidates[i], comb, i)
+            # Backtrack by removing the last element
+            comb.pop()
+
+    backtrack(target, [], 0)
+    return result
+
+# 测试示例
+candidates = [2, 3, 6, 7]
+target = 7
+output = combination_sum(candidates, target)
+print(output)
+Python代码详解
+backtrack(remain, comb, start)为辅助函数，其中remain是剩余目标，comb是当前组合，start是当前索引。
+如果remain == 0，将当前组合加入result。
+如果remain < 0，则终止此路径。
+遍历candidates，尝试将每个数字加入组合并递归地调用backtrack，以探索更多可能性。最后通过comb.pop()回溯。
+C语言解答
+在C语言中，我们需要手动管理内存和结果数组的大小。这里将用到递归和动态分配内存，以下是实现代码：
+
+c
+复制代码
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_COMBINATIONS 100
+#define MAX_COMB_SIZE 20
+
+int** result;
+int* returnColumnSizes;
+int resultSize;
+
+// Helper function to backtrack
+void backtrack(int* candidates, int candidatesSize, int target, int* combination, int combSize, int start) {
+    if (target == 0) {
+        // Allocate memory for new combination
+        int* newComb = (int*)malloc(combSize * sizeof(int));
+        for (int i = 0; i < combSize; i++) {
+            newComb[i] = combination[i];
+        }
+        result[resultSize] = newComb;
+        returnColumnSizes[resultSize] = combSize;
+        resultSize++;
+        return;
+    } else if (target < 0) {
+        return;
+    }
+
+    // Try each candidate starting from current index
+    for (int i = start; i < candidatesSize; i++) {
+        combination[combSize] = candidates[i];
+        backtrack(candidates, candidatesSize, target - candidates[i], combination, combSize + 1, i);
+    }
+}
+
+int** combinationSum(int* candidates, int candidatesSize, int target, int* returnSize, int** returnColumnSizes) {
+    result = (int**)malloc(MAX_COMBINATIONS * sizeof(int*));
+    *returnColumnSizes = (int*)malloc(MAX_COMBINATIONS * sizeof(int));
+    resultSize = 0;
+    
+    int* combination = (int*)malloc(MAX_COMB_SIZE * sizeof(int));
+    backtrack(candidates, candidatesSize, target, combination, 0, 0);
+
+    *returnSize = resultSize;
+    return result;
+}
+
+int main() {
+    int candidates[] = {2, 3, 6, 7};
+    int target = 7;
+    int returnSize;
+    int* returnColumnSizes;
+
+    int** output = combinationSum(candidates, sizeof(candidates) / sizeof(candidates[0]), target, &returnSize, &returnColumnSizes);
+
+    // Print result
+    printf("[\n");
+    for (int i = 0; i < returnSize; i++) {
+        printf("  [");
+        for (int j = 0; j < returnColumnSizes[i]; j++) {
+            printf("%d", output[i][j]);
+            if (j < returnColumnSizes[i] - 1) printf(", ");
+        }
+        printf("]\n");
+    }
+    printf("]\n");
+
+    // Free allocated memory
+    for (int i = 0; i < returnSize; i++) {
+        free(output[i]);
+    }
+    free(output);
+    free(returnColumnSizes);
+    free(combination);
+
+    return 0;
+}
+C代码详解
+递归函数backtrack：递归地尝试每个候选值来构造组合。combination存储当前组合，combSize是当前组合的长度。
+内存管理：result数组用于存储每个组合的指针，returnColumnSizes用于存储每个组合的大小。
+边界条件：当target == 0时，说明组合成功，分配内存并将组合复制到result。如果target < 0则终止当前递归。
+内存释放：确保在程序结束时释放动态分配的内存，防止内存泄漏。
+这个题目通过回溯法探索所有可能组合，适合练习递归、数组和内存管理。
